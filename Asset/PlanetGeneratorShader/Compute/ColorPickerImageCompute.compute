@@ -1,0 +1,43 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> ColorPickerImageTex;
+float4 PickedColor;
+int TextureSize;
+
+
+float InverseLerp(float a, float b, float value)  // Changed return type to float
+{
+    return saturate((value - a) / (b - a));
+}
+
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    
+
+    //!- v3
+    float2 UV = id.xy / float2(TextureSize, TextureSize);
+    float1 VerticalGradient = InverseLerp(-0.01,0.35,UV.y);
+    float1 Gradient = VerticalGradient * UV.x;
+
+    float1 WhiteGradient = ((1 - UV.x) * 0.1) * VerticalGradient;
+
+    float4 GradientColor = float4(Gradient,Gradient,Gradient,1);
+
+    GradientColor = PickedColor * saturate(GradientColor);
+
+    GradientColor += WhiteGradient;
+
+    GradientColor.w = 1;
+
+
+    GradientColor.xyz *= 5 ;
+
+    ColorPickerImageTex[id.xy] = GradientColor;
+
+
+}

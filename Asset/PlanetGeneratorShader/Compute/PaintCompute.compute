@@ -1,0 +1,39 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> PaintTexture;
+float4 _Coordinates;
+float _Size;
+float _Strength;
+float4 _Color;
+float _Eraser;
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    float4 col = 0;
+    // float draw = saturate(pow(saturate(1- distance( (float)id.xy / 1024, _Coordinates.xy)), 500/_Size));
+    float1 s = _Strength;
+    float1 l = length( float2(id.xy) - _Coordinates.xy);
+    l = (1 - (l / _Size)) * 0.03;
+
+
+    //l = saturate(l);
+    l = saturate(l / max(1 - _Strength,0.0001));
+
+    
+    
+    col = pow(_Color,2.2);
+
+    col *= _Eraser;
+
+
+    PaintTexture[id.xy] = lerp(PaintTexture[id.xy], col, l.xxxx);
+}
+
+float InverseLerp(float a, float b, float t)
+{
+    return saturate((t - a) / (b - a));
+}
